@@ -16,8 +16,15 @@ export default class SmartSpellcheck extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		// this adds a settings tab so the user can configure various aspects of the plugin
+		this.addSettingTab(new SettingsTab(this.app, this));
+
+		// register event to read content when it changes
+		this.registerEvent(
+			this.app.workspace.on('editor-change', (editor) => {
+				this.readEditorContent(editor);
+			})
+		);
 
 	}
 
@@ -33,18 +40,58 @@ export default class SmartSpellcheck extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	readEditorContent(editor: Editor){
-		const content = editor.getValue();
+	addStyle(){
+		const styleE1 = document.createElement('style');
+		styleE1.id = 'smart-spellcheck-style';
+		styleE1.textContent = `
+		
+		/* Hide spell check highlights for all uppercase words */
+		.cm-spell-error.cm-upper {
+			text-decoration: none !important;
+			background-color: transparent !important;
+		}
+	
+		`;
+		document.head.appendChild(styleE1)
+	}
+	
 
-		// regex expression for all uppercase, adding custom settings will be implemented later
-		const uppercaseWords = content.match(/\b[A-Z]+\b/g);
+	readEditorContent(editor: Editor){
+		
+		// iterate through every line in the file
+		const lineCount = editor.lineCount();
+
+		for(let i = 0; i < lineCount; i++){
+			const line = editor.getLine(i);
+
+			// array of all upper case words in the current line of for loop, defaults to empty if none found
+			const uppercaseWords = line.match(/\b[A-Z]+\b/g)
+
+			// add new .cm-upper to all-uppercase words
+			let newLine = line;
+			uppercaseWords?.forEach((word) => {
+				const regex = new RegExp(`\\b${word}\\b`, 'g');
+				newLine = newLine.replace(regex, `<span class="cm-upper">${word}</span>`);
+			}
+
+		);
+
+		// update line in editor if changes were made
+		if(newLine !== line){
+			editor.setLine(i, newLine);
+		}
+
+
+		}
+		
+		
 
 	}
 
 }
 
 
-class SampleSettingTab extends PluginSettingTab {
+class SettingsTab extends PluginSettingTab {
 	plugin: SmartSpellcheck;
 
 	constructor(app: App, plugin: SmartSpellcheck) {
