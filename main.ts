@@ -32,23 +32,17 @@ export default class SmartSpellcheck extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	readEditorContent(editor: Editor){
+		const content = editor.getValue();
+
+		// regex expression for all uppercase, adding custom settings will be implemented later
+		const uppercaseWords = content.match(/\b[A-Z]+\b/g);
+
+	}
+
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
 
 class SampleSettingTab extends PluginSettingTab {
 	plugin: SmartSpellcheck;
