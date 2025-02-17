@@ -56,36 +56,23 @@ export default class SmartSpellcheck extends Plugin {
 	}
 	
 
-	readEditorContent(editor: Editor){
-		
-		// iterate through every line in the file
-		const lineCount = editor.lineCount();
+	readEditorContent(editor: Editor) {
+		const cursor = editor.getCursor(); // Get cursor position
+		const line = editor.getLine(cursor.line); // Get the content of the modified line
 
-		for(let i = 0; i < lineCount; i++){
-			const line = editor.getLine(i);
+		const uppercaseWords = line.match(/\b[A-Z]+\b/g); // Find all uppercase words
 
-			// array of all upper case words in the current line of for loop, defaults to empty if none found
-			const uppercaseWords = line.match(/\b[A-Z]+\b/g)
+		// Create a new line with uppercase words wrapped in <span>
+		let newLine = line;
+		uppercaseWords?.forEach((word) => {
+			const regex = new RegExp(`\\b${word}\\b`, 'g');
+			newLine = newLine.replace(regex, `<span class="cm-upper">${word}</span>`);
+		});
 
-			// add new .cm-upper to all-uppercase words
-			let newLine = line;
-			uppercaseWords?.forEach((word) => {
-				const regex = new RegExp(`\\b${word}\\b`, 'g');
-				newLine = newLine.replace(regex, `<span class="cm-upper">${word}</span>`);
-			}
-
-		);
-
-		// update line in editor if changes were made
-		if(newLine !== line){
-			editor.setLine(i, newLine);
+		// Only update the line if changes were made
+		if (newLine !== line) {
+			editor.setLine(cursor.line, newLine);
 		}
-
-
-		}
-		
-		
-
 	}
 
 }
